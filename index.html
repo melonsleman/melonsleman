@@ -2,29 +2,61 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Agrowisata Melon Sleman</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
     <style>
-      body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+      body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+      
       .hero-header { 
         position: relative;
         background: linear-gradient(rgba(10, 40, 15, 0.75), rgba(15, 60, 25, 0.82)), 
                     url('https://lh3.googleusercontent.com/d/1TkfNlJ4u5-Cch6mS-lHj8p-9Pb3QsTLx') center/cover no-repeat;
-        color: white; padding: 3.5rem 0 3rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        color: white; padding: 2.5rem 1rem 2rem 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
       }
-      .logo-header { max-height: 95px; width: auto; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.4)); }
+      
+      .logo-header { 
+        max-height: 80px; 
+        width: auto; 
+        filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.4)); 
+      }
+
+      .badge-pemkab {
+        background: rgba(255, 193, 7, 0.95);
+        color: #111;
+        letter-spacing: 0.5px;
+        white-space: normal !important; /* Agar teks otomatis membungkus/pindah baris di HP */
+        line-height: 1.4;
+        display: inline-block;
+        max-width: 95%;
+        font-size: 0.85rem;
+      }
+
       .card-greenhouse { transition: transform 0.2s, box-shadow 0.2s; border: none; border-radius: 14px; }
       .card-greenhouse:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
+      
       .badge-berlangsung { background-color: #198754; color: white; }
       .badge-mendatang { background-color: #0d6efd; color: white; }
       .badge-selesai { background-color: #6c757d; color: white; }
-      .filter-box { background: white; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
-      .stat-card { background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 0.75rem 0.5rem; }
-      .badge-pemkab { background: rgba(255, 193, 7, 0.9); color: #111; letter-spacing: 0.5px; }
-      #map-container { height: 380px; width: 100%; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); z-index: 1; }
+      
+      .filter-box { background: white; border-radius: 14px; padding: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
+      .stat-card { background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 0.6rem 0.4rem; }
+      
+      #map-container { height: 350px; width: 100%; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); z-index: 1; }
+
+      /* PENYESUAIAN KHUSUS LAYAR SELEMPANG / HP (MOBILE RESPONSIVE) */
+      @media (max-width: 576px) {
+        .hero-header { padding: 1.8rem 0.8rem 1.5rem 0.8rem; }
+        .logo-header { max-height: 60px; }
+        .badge-pemkab { font-size: 0.72rem; padding: 0.4rem 0.6rem !important; }
+        h1.display-6 { font-size: 1.4rem !important; }
+        p.lead { font-size: 0.88rem !important; margin-bottom: 1.2rem !important; }
+        .stat-card .h4 { font-size: 1.1rem !important; }
+        .stat-card small { font-size: 0.68rem !important; }
+        #map-container { height: 280px; }
+      }
     </style>
   </head>
   <body>
@@ -34,30 +66,37 @@
       <div class="container-fluid">
         <span class="navbar-brand fs-6 fw-bold text-success">🍈 Portal Agrowisata Sleman</span>
         <button class="btn btn-outline-warning btn-sm fw-bold ms-auto position-relative" onclick="bukaModalLoginAdmin()">
-          🔐 Panel Admin
+          🔐 Admin
           <span id="badgePendingCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">0</span>
         </button>
       </div>
     </nav>
 
     <div class="hero-header mb-4">
-      <div class="container text-center">
-        <div class="d-flex justify-content-center align-items-center mb-3">
+      <div class="container text-center px-2">
+        <div class="d-flex justify-content-center align-items-center mb-2">
           <img src="https://lh3.googleusercontent.com/d/1ZffmHPiuOvjKqJ7lXnBp0J4B3fMN4fT0" alt="Logo Kabupaten Sleman" class="logo-header">
         </div>
-        <span class="badge badge-pemkab px-3 py-2 mb-2 fw-bold text-uppercase shadow-sm">Dinas Pertanian, Pangan dan Perikanan Kabupaten Sleman</span>
+        
+        <!-- TEKS DINAS PERTANIAN DENGAN BUNGKUS RESPONSIVE -->
+        <div class="mb-2">
+          <span class="badge badge-pemkab px-3 py-2 fw-bold text-uppercase shadow-sm">
+            Dinas Pertanian, Pangan dan Perikanan Kabupaten Sleman
+          </span>
+        </div>
+        
         <h1 class="fw-bold display-6 mb-2 text-white">🍈 Agrowisata Open Farm Melon Sleman</h1>
-        <p class="lead mb-4 mx-auto text-white-50" style="max-width: 780px;">Katalog Resmi Sentra Budidaya Melon Hidroponik Modern Lereng Gunung Merapi Kab. Sleman</p>
+        <p class="lead mb-3 mx-auto text-white-50" style="max-width: 780px;">Katalog Resmi Sentra Budidaya Melon Hidroponik Modern Lereng Gunung Merapi Kab. Sleman</p>
 
-        <div class="row g-2 justify-content-center mb-4" style="max-width: 900px; margin: 0 auto;">
-          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statGH">0</div><small class="text-white-50">Greenhouse</small></div></div>
-          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statWilayah">0</div><small class="text-white-50">Kapanewon</small></div></div>
-          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statLuas">0 m²</div><small class="text-white-50">Total Luasan</small></div></div>
+        <div class="row g-2 justify-content-center mb-3" style="max-width: 900px; margin: 0 auto;">
+          <div class="col-4 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statGH">0</div><small class="text-white-50">Greenhouse</small></div></div>
+          <div class="col-4 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statWilayah">0</div><small class="text-white-50">Kapanewon</small></div></div>
+          <div class="col-4 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statLuas">0 m²</div><small class="text-white-50">Total Luasan</small></div></div>
           <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statPopulasi">0</div><small class="text-white-50">Populasi Pohon</small></div></div>
           <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statAktif">0</div><small class="text-white-50">Panen Aktif</small></div></div>
         </div>
         
-        <button class="btn btn-warning fw-bold px-4 py-2.5 rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#modalDaftar">➕ Daftarkan Greenhouse / Agenda Panen</button>
+        <button class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow btn-sm-mobile" data-bs-toggle="modal" data-bs-target="#modalDaftar">➕ Daftarkan Greenhouse / Agenda Panen</button>
       </div>
     </div>
 
@@ -65,8 +104,8 @@
       <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center mb-3 px-1">
-            <h5 class="fw-bold text-success mb-0">🗺️ Peta Sebaran Greenhouse Open Farm (Sleman)</h5>
-            <small class="text-muted">Klik penanda untuk melihat info detail</small>
+            <h6 class="fw-bold text-success mb-0">🗺️ Peta Sebaran Greenhouse Open Farm (Sleman)</h6>
+            <small class="text-muted" style="font-size: 0.72rem;">Klik penanda untuk info detail</small>
           </div>
           <div id="map-container"></div>
         </div>
@@ -75,12 +114,12 @@
       <div class="filter-box mb-4">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label fw-semibold text-secondary">📍 Wilayah (Kapanewon)</label>
-            <select id="filterKapanewon" class="form-select" onchange="terapkanFilter()"><option value="">Semua Kapanewon</option></select>
+            <label class="form-label fw-semibold text-secondary small">📍 Wilayah (Kapanewon)</label>
+            <select id="filterKapanewon" class="form-select form-select-sm" onchange="terapkanFilter()"><option value="">Semua Kapanewon</option></select>
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold text-secondary">🏷️ Status Agenda</label>
-            <select id="filterStatus" class="form-select" onchange="terapkanFilter()">
+            <label class="form-label fw-semibold text-secondary small">🏷️ Status Agenda</label>
+            <select id="filterStatus" class="form-select form-select-sm" onchange="terapkanFilter()">
               <option value="">Semua Status</option>
               <option value="Berlangsung">Berlangsung (Bisa Dikunjungi)</option>
               <option value="Mendatang">Mendatang</option>
@@ -88,19 +127,19 @@
             </select>
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold text-secondary">🔍 Cari Melon / Greenhouse</label>
-            <input type="text" id="inputCari" class="form-control" placeholder="Contoh: Inthanon, Pakem..." onkeyup="terapkanFilter()">
+            <label class="form-label fw-semibold text-secondary small">🔍 Cari Melon / Greenhouse</label>
+            <input type="text" id="inputCari" class="form-control form-control-sm" placeholder="Contoh: Inthanon, Pakem..." onkeyup="terapkanFilter()">
           </div>
         </div>
       </div>
 
       <div id="loading" class="text-center my-5">
-        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
-        <p class="mt-3 text-muted fw-semibold">Memuat data open farm melon...</p>
+        <div class="spinner-border text-success" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+        <p class="mt-3 text-muted fw-semibold small">Memuat data open farm melon...</p>
       </div>
 
       <div id="infoHasil" class="mb-3 text-muted small fw-semibold" style="display: none;"></div>
-      <div id="daftar-agenda" class="row g-4"></div>
+      <div id="daftar-agenda" class="row g-3"></div>
     </div>
 
     <!-- MODAL LOGIN ADMIN -->
@@ -128,20 +167,20 @@
       <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title fw-bold">⚙️ Dashboard Persetujuan & Pengelola Admin</h5>
+            <h5 class="modal-title fw-bold fs-6">⚙️ Dashboard Persetujuan Admin</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body p-2 p-md-3">
             
             <ul class="nav nav-tabs mb-3" id="adminTab" role="tablist">
               <li class="nav-item">
-                <button class="nav-link active fw-bold text-dark" id="tab-pending-tab" data-bs-toggle="tab" data-bs-target="#tab-pending" type="button">
-                  ⏳ Menunggu Persetujuan <span id="countTabPending" class="badge bg-danger ms-1">0</span>
+                <button class="nav-link active fw-bold text-dark small" id="tab-pending-tab" data-bs-toggle="tab" data-bs-target="#tab-pending" type="button">
+                  ⏳ Menunggu <span id="countTabPending" class="badge bg-danger ms-1">0</span>
                 </button>
               </li>
               <li class="nav-item">
-                <button class="nav-link fw-bold text-dark" id="tab-approved-tab" data-bs-toggle="tab" data-bs-target="#tab-approved" type="button">
-                  ✅ Pendaftaran Disetujui (Tayang)
+                <button class="nav-link fw-bold text-dark small" id="tab-approved-tab" data-bs-toggle="tab" data-bs-target="#tab-approved" type="button">
+                  ✅ Disetujui
                 </button>
               </li>
             </ul>
@@ -150,21 +189,17 @@
               <!-- TAB 1: PENDING APPROVAL -->
               <div class="tab-pane fade show active" id="tab-pending">
                 <div class="table-responsive">
-                  <table class="table table-hover table-striped align-middle small">
+                  <table class="table table-hover table-striped align-middle" style="font-size: 0.78rem;">
                     <thead class="table-warning">
                       <tr>
-                        <th>Nama Greenhouse</th>
-                        <th>Pemilik / WA</th>
+                        <th>Greenhouse</th>
+                        <th>Pemilik/WA</th>
                         <th>Wilayah</th>
-                        <th>Varietas Melon</th>
-                        <th>Jadwal Panen</th>
-                        <th>Lokasi Maps</th>
-                        <th class="text-center">Aksi Persetujuan</th>
+                        <th>Varietas</th>
+                        <th>Aksi</th>
                       </tr>
                     </thead>
-                    <tbody id="tabelPendingContent">
-                      <!-- Diisi JavaScript -->
-                    </tbody>
+                    <tbody id="tabelPendingContent"></tbody>
                   </table>
                 </div>
               </div>
@@ -172,29 +207,25 @@
               <!-- TAB 2: APPROVED -->
               <div class="tab-pane fade" id="tab-approved">
                 <div class="table-responsive">
-                  <table class="table table-hover table-striped align-middle small">
+                  <table class="table table-hover table-striped align-middle" style="font-size: 0.78rem;">
                     <thead class="table-dark">
                       <tr>
-                        <th>Nama Greenhouse</th>
-                        <th>Kapanewon</th>
+                        <th>Greenhouse</th>
+                        <th>Wilayah</th>
                         <th>Varietas</th>
-                        <th>Tgl Panen</th>
-                        <th>Terisi / Maks</th>
-                        <th>Status</th>
-                        <th>Aksi Admin</th>
+                        <th>Pengunjung</th>
+                        <th>Aksi</th>
                       </tr>
                     </thead>
-                    <tbody id="tabelApprovedContent">
-                      <!-- Diisi JavaScript -->
-                    </tbody>
+                    <tbody id="tabelApprovedContent"></tbody>
                   </table>
                 </div>
               </div>
             </div>
 
           </div>
-          <div class="modal-footer bg-light">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+          <div class="modal-footer bg-light p-2">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
           </div>
         </div>
       </div>
@@ -205,41 +236,41 @@
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header bg-success text-white">
-            <h5 class="modal-header-title fw-bold">📝 Form Pendaftaran Agenda Open Farm</h5>
+            <h5 class="modal-header-title fw-bold fs-6">📝 Form Pendaftaran Agenda Open Farm</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <form id="formPendaftaran" onsubmit="prosesKirimForm(event)">
               <div class="row g-3 mb-3">
-                <div class="col-md-6"><label class="form-label">Nama Greenhouse</label><input type="text" class="form-control" id="namaGH" required></div>
-                <div class="col-md-6"><label class="form-label">Pemilik</label><input type="text" class="form-control" id="pemilik" required></div>
+                <div class="col-md-6"><label class="form-label small">Nama Greenhouse</label><input type="text" class="form-control form-control-sm" id="namaGH" required></div>
+                <div class="col-md-6"><label class="form-label small">Pemilik</label><input type="text" class="form-control form-control-sm" id="pemilik" required></div>
                 <div class="col-md-6">
-                  <label class="form-label">Kapanewon</label>
-                  <select class="form-select" id="kapanewon" required>
+                  <label class="form-label small">Kapanewon</label>
+                  <select class="form-select form-select-sm" id="kapanewon" required>
                     <option value="">-- Pilih --</option>
                     <option value="Berbah">Berbah</option><option value="Cangkringan">Cangkringan</option><option value="Depok">Depok</option><option value="Gamping">Gamping</option><option value="Godean">Godean</option><option value="Kalasan">Kalasan</option><option value="Minggir">Minggir</option><option value="Mlati">Mlati</option><option value="Moyudan">Moyudan</option><option value="Ngaglik">Ngaglik</option><option value="Ngemplak">Ngemplak</option><option value="Pakem">Pakem</option><option value="Prambanan">Prambanan</option><option value="Seyegan">Seyegan</option><option value="Sleman">Sleman</option><option value="Tempel">Tempel</option><option value="Turi">Turi</option>
                   </select>
                 </div>
-                <div class="col-md-6"><label class="form-label">WhatsApp</label><input type="text" class="form-control" id="wa" required></div>
-                <div class="col-md-6"><label class="form-label">Luas (m²)</label><input type="number" class="form-control" id="luas" required></div>
-                <div class="col-md-6"><label class="form-label">Populasi (Pohon)</label><input type="number" class="form-control" id="populasi" required></div>
-                <div class="col-12"><label class="form-label">Alamat Lengkap</label><input type="text" class="form-control" id="alamat" required></div>
-                <div class="col-12"><label class="form-label">Link Google Maps</label><input type="url" class="form-control" id="maps" required></div>
-                <div class="col-md-6"><label class="form-label">Latitude</label><input type="text" class="form-control" id="latitude"></div>
-                <div class="col-md-6"><label class="form-label">Longitude</label><input type="text" class="form-control" id="longitude"></div>
-                <div class="col-md-6"><label class="form-label">Varietas Melon</label><input type="text" class="form-control" id="varietas" required></div>
-                <div class="col-md-6"><label class="form-label">Tanggal Tanam</label><input type="date" class="form-control" id="tglTanam" required onchange="hitungEstimasiPanen()"></div>
-                <div class="col-md-6"><label class="form-label">Mulai Panen</label><input type="text" class="form-control bg-light" id="tglMulai" readonly></div>
-                <div class="col-md-6"><label class="form-label">Selesai Panen</label><input type="text" class="form-control bg-light" id="tglSelesai" readonly></div>
-                <div class="col-md-4"><label class="form-label">Jam Operasional</label><input type="text" class="form-control" id="jam" required></div>
-                <div class="col-md-4"><label class="form-label">Kapasitas Maks</label><input type="number" class="form-control" id="kapasitas" required></div>
-                <div class="col-md-4"><label class="form-label">Harga/Kg</label><input type="number" class="form-control" id="harga" required></div>
-                <div class="col-12"><label class="form-label">Catatan</label><textarea class="form-control" id="catatan" rows="2"></textarea></div>
+                <div class="col-md-6"><label class="form-label small">WhatsApp</label><input type="text" class="form-control form-control-sm" id="wa" required></div>
+                <div class="col-md-6"><label class="form-label small">Luas (m²)</label><input type="number" class="form-control form-control-sm" id="luas" required></div>
+                <div class="col-md-6"><label class="form-label small">Populasi (Pohon)</label><input type="number" class="form-control form-control-sm" id="populasi" required></div>
+                <div class="col-12"><label class="form-label small">Alamat Lengkap</label><input type="text" class="form-control form-control-sm" id="alamat" required></div>
+                <div class="col-12"><label class="form-label small">Link Google Maps</label><input type="url" class="form-control form-control-sm" id="maps" required></div>
+                <div class="col-md-6"><label class="form-label small">Latitude</label><input type="text" class="form-control form-control-sm" id="latitude"></div>
+                <div class="col-md-6"><label class="form-label small">Longitude</label><input type="text" class="form-control form-control-sm" id="longitude"></div>
+                <div class="col-md-6"><label class="form-label small">Varietas Melon</label><input type="text" class="form-control form-control-sm" id="varietas" required></div>
+                <div class="col-md-6"><label class="form-label small">Tanggal Tanam</label><input type="date" class="form-control form-control-sm" id="tglTanam" required onchange="hitungEstimasiPanen()"></div>
+                <div class="col-md-6"><label class="form-label small">Mulai Panen</label><input type="text" class="form-control form-control-sm bg-light" id="tglMulai" readonly></div>
+                <div class="col-md-6"><label class="form-label small">Selesai Panen</label><input type="text" class="form-control form-control-sm bg-light" id="tglSelesai" readonly></div>
+                <div class="col-md-4"><label class="form-label small">Jam Operasional</label><input type="text" class="form-control form-control-sm" id="jam" required></div>
+                <div class="col-md-4"><label class="form-label small">Kapasitas Maks</label><input type="number" class="form-control form-control-sm" id="kapasitas" required></div>
+                <div class="col-md-4"><label class="form-label small">Harga/Kg</label><input type="number" class="form-control form-control-sm" id="harga" required></div>
+                <div class="col-12"><label class="form-label small">Catatan</label><textarea class="form-control form-control-sm" id="catatan" rows="2"></textarea></div>
               </div>
               <div id="pesanForm" class="mt-3"></div>
               <div class="modal-footer px-0 pb-0 pt-3">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" id="btnSubmit" class="btn btn-success fw-bold">💾 Kirim Pendaftaran</button>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" id="btnSubmit" class="btn btn-sm btn-success fw-bold">💾 Kirim Pendaftaran</button>
               </div>
             </form>
           </div>
@@ -249,28 +280,28 @@
 
     <!-- MODAL PENGUNJUNG -->
     <div class="modal fade" id="modalPengunjung" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
           <div class="modal-header bg-primary text-white">
-            <h5 class="modal-header-title fw-bold">👥 Catat / Tambah Pengunjung</h5>
+            <h6 class="modal-header-title fw-bold">👥 Catat Pengunjung</h6>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <form id="formUpdatePengunjung" onsubmit="prosesUpdatePengunjung(event)">
               <input type="hidden" id="modalIdPanen">
-              <h6 class="fw-bold text-dark mb-3" id="modalNamaGH">-</h6>
-              <div class="p-2 bg-light rounded border mb-3">
-                <small class="text-muted d-block">Status Kuota Saat Ini:</small>
+              <h6 class="fw-bold text-dark mb-2 small" id="modalNamaGH">-</h6>
+              <div class="p-2 bg-light rounded border mb-3 small">
+                <small class="text-muted d-block">Kuota Saat Ini:</small>
                 <strong id="modalInfoTerisi">0</strong> / <strong id="modalInfoMaks">0</strong> Orang
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Jumlah Pengunjung Tambahan</label>
-                <input type="number" class="form-control form-control-lg text-center" id="inputJumlahPengunjung" min="1" value="1" required>
+                <label class="form-label small fw-semibold">Jumlah Pengunjung Tambahan</label>
+                <input type="number" class="form-control text-center" id="inputJumlahPengunjung" min="1" value="1" required>
               </div>
               <div id="pesanUpdatePengunjung"></div>
               <div class="modal-footer px-0 pb-0 pt-2">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" id="btnSimpanPengunjung" class="btn btn-primary fw-bold">💾 Simpan Tambahan</button>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" id="btnSimpanPengunjung" class="btn btn-sm btn-primary fw-bold">💾 Simpan</button>
               </div>
             </form>
           </div>
@@ -282,7 +313,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-      // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+      // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI (BERAKHIRAN /exec)
       const API_URL = "https://script.google.com/macros/s/AKfycbw3fh7txlMq3vfX2wc3wcfa-3cH4-NN5d6tqEpW1yKgSp6myqgGXenKr5nLVfhEYoqh/exec";
       const PIN_ADMIN = "5747";
 
@@ -325,9 +356,8 @@
 
         document.getElementById('countTabPending').innerText = listPending.length;
 
-        // Render Pending
         if (listPending.length === 0) {
-          tbodyPending.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Tidak ada pendaftaran baru yang menunggu persetujuan.</td></tr>';
+          tbodyPending.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada pendaftaran baru.</td></tr>';
         } else {
           var htmlPending = '';
           listPending.forEach(function(item) {
@@ -337,11 +367,9 @@
                 <td>${item.pemilik}<br><small class="text-muted">${item.wa}</small></td>
                 <td>${item.kapanewon}</td>
                 <td>${item.varietas}</td>
-                <td>${item.tglMulai} - ${item.tglSelesai}</td>
-                <td><a href="${item.maps}" target="_blank" class="btn btn-sm btn-outline-secondary py-0">🗺️ Buka Maps</a></td>
-                <td class="text-center">
-                  <button class="btn btn-sm btn-success py-1 px-2 fw-bold me-1" onclick="eksekusiApproval('${item.idPanen}', 'Approved')">✅ Approve</button>
-                  <button class="btn btn-sm btn-danger py-1 px-2 fw-bold" onclick="eksekusiApproval('${item.idPanen}', 'Rejected')">❌ Reject</button>
+                <td>
+                  <button class="btn btn-sm btn-success py-0 px-2 fw-bold mb-1" onclick="eksekusiApproval('${item.idPanen}', 'Approved')">✅ Approve</button>
+                  <button class="btn btn-sm btn-danger py-0 px-2 fw-bold" onclick="eksekusiApproval('${item.idPanen}', 'Rejected')">❌ Reject</button>
                 </td>
               </tr>
             `;
@@ -349,9 +377,8 @@
           tbodyPending.innerHTML = htmlPending;
         }
 
-        // Render Approved
         if (listApproved.length === 0) {
-          tbodyApproved.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Belum ada data pendaftaran yang disetujui.</td></tr>';
+          tbodyApproved.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data disetujui.</td></tr>';
         } else {
           var htmlApproved = '';
           listApproved.forEach(function(item) {
@@ -361,9 +388,7 @@
                 <td class="fw-bold text-success">${item.namaGH}</td>
                 <td>${item.kapanewon}</td>
                 <td>${item.varietas}</td>
-                <td>${item.tglMulai} - ${item.tglSelesai}</td>
-                <td><strong>${item.terisi}</strong> / ${item.kapasitas} orang</td>
-                <td><span class="badge bg-success">Tayang</span></td>
+                <td><strong>${item.terisi}</strong>/${item.kapasitas}</td>
                 <td>
                   <button class="btn btn-sm btn-primary py-0" onclick="bootstrap.Modal.getInstance(document.getElementById('modalDashboardAdmin')).hide(); bukaModalUpdatePengunjung('${item.idPanen}', '${safeNama}', ${item.terisi}, ${item.kapasitas})">
                     ➕ Pengunjung
@@ -379,11 +404,7 @@
       function eksekusiApproval(idPanen, statusTarget) {
         if (!confirm('Apakah Anda yakin ingin mengubah status pendaftaran ini menjadi ' + statusTarget + '?')) return;
 
-        fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'updateStatusPendaftaran', idPanen: idPanen, statusApprove: statusTarget })
-        })
-        .then(res => res.json())
+        kirimRequestAPI({ action: 'updateStatusPendaftaran', idPanen: idPanen, statusApprove: statusTarget })
         .then(res => {
           if (res.success) {
             alert(res.message);
@@ -412,7 +433,7 @@
           if (item.lat && item.lng) {
             var colorBadge = item.status === 'Berlangsung' ? 'success' : (item.status === 'Mendatang' ? 'primary' : 'secondary');
             var popupContent = `
-              <div style="min-width:180px;">
+              <div style="min-width:160px;">
                 <span class="badge bg-${colorBadge} mb-1">${item.status}</span>
                 <h6 class="fw-bold mb-1 text-success">${item.namaGH}</h6>
                 <div class="small text-muted mb-1">🍈 Melon: <strong>${item.varietas || '-'}</strong></div>
@@ -425,7 +446,7 @@
             validBounds.push([item.lat, item.lng]);
           }
         });
-        if (validBounds.length > 0) mapLeaflet.fitBounds(validBounds, { padding: [30, 30] });
+        if (validBounds.length > 0) mapLeaflet.fitBounds(validBounds, { padding: [20, 20] });
       }
 
       function formatDMY(d) {
@@ -463,13 +484,30 @@
         }
       }
 
+      // FUNGSI REQUEST API UNIVERSAL KHUSUS PENCEGAHAN CROS/MOBILE ERROR
+      function kirimRequestAPI(payloadData) {
+        if (payloadData) {
+          return fetch(API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payloadData)
+          }).then(res => res.json());
+        } else {
+          return fetch(API_URL + '?t=' + new Date().getTime(), {
+            method: 'GET',
+            mode: 'cors',
+            redirect: 'follow'
+          }).then(res => res.json());
+        }
+      }
+
       function muatDataAwal() {
         document.getElementById('loading').style.display = 'block';
-        fetch(API_URL, { redirect: 'follow' })
-          .then(res => res.json())
+        kirimRequestAPI(null)
           .then(data => inisialisasiHalaman(data))
           .catch(err => {
-            document.getElementById('loading').innerHTML = '<div class="alert alert-danger text-center">Gagal memuat data: ' + err + '</div>';
+            document.getElementById('loading').innerHTML = '<div class="alert alert-danger text-center small">Gagal memuat data: ' + err + '. Silakan muat ulang halaman.</div>';
           });
       }
 
@@ -477,7 +515,6 @@
         semuaData = data || [];
         document.getElementById('loading').style.display = 'none';
 
-        // Hitung Notifikasi Badge Pending untuk Tombol Admin
         var pendingCount = semuaData.filter(i => i.statusApprove === 'Pending').length;
         var badgeEl = document.getElementById('badgePendingCount');
         if (pendingCount > 0) {
@@ -487,7 +524,6 @@
           badgeEl.style.display = 'none';
         }
 
-        // Filter Publik: Hanya menampilkan pendaftaran yang berstatus 'Approved'
         var dataPublik = semuaData.filter(i => i.statusApprove === 'Approved');
 
         updateRingkasanStatistik(dataPublik);
@@ -553,7 +589,7 @@
         infoHasil.style.display = 'block'; infoHasil.innerText = 'Menampilkan ' + data.length + ' agenda open farm.';
 
         if (!data || data.length === 0) {
-          container.innerHTML = '<div class="col-12"><div class="alert alert-warning text-center py-4">Belum ada agenda open farm disetujui.</div></div>';
+          container.innerHTML = '<div class="col-12"><div class="alert alert-warning text-center py-4 small">Belum ada agenda open farm disetujui.</div></div>';
           return;
         }
 
@@ -568,30 +604,30 @@
           html += `
             <div class="col-md-6 col-lg-4">
               <div class="card h-100 shadow-sm card-greenhouse">
-                <div class="card-body d-flex flex-column">
+                <div class="card-body d-flex flex-column p-3">
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span class="badge ${badgeClass} px-2 py-1">${statusIcon} ${item.status}</span>
-                    <small class="text-muted fw-semibold">📍 Kapanewon ${item.kapanewon || '-'}</small>
+                    <small class="text-muted fw-semibold">📍 ${item.kapanewon || '-'}</small>
                   </div>
-                  <h5 class="card-title fw-bold text-success mb-1">${item.namaGH}</h5>
-                  <div class="small text-muted mb-2">🌱 Tgl Tanam: <strong class="text-dark">${formatTglTanamDenganHari(item.tglTanam)}</strong></div>
-                  <div class="d-flex gap-2 mb-2">
-                    <span class="badge bg-light text-dark border fw-normal">📐 Luas: <strong>${item.luas ? item.luas + ' m²' : '-'}</strong></span>
-                    <span class="badge bg-light text-dark border fw-normal">🪴 Pop: <strong>${item.populasi ? item.populasi + ' poh' : '-'}</strong></span>
+                  <h5 class="card-title fw-bold text-success mb-1 fs-6">${item.namaGH}</h5>
+                  <div class="small text-muted mb-2" style="font-size:0.78rem;">🌱 Tgl Tanam: <strong class="text-dark">${formatTglTanamDenganHari(item.tglTanam)}</strong></div>
+                  <div class="d-flex gap-1 mb-2">
+                    <span class="badge bg-light text-dark border fw-normal" style="font-size:0.7rem;">📐 Luas: <strong>${item.luas ? item.luas + 'm²' : '-'}</strong></span>
+                    <span class="badge bg-light text-dark border fw-normal" style="font-size:0.7rem;">🪴 Pop: <strong>${item.populasi ? item.populasi + ' poh' : '-'}</strong></span>
                   </div>
                   <hr class="my-2 text-muted">
-                  <div class="mb-2"><div class="small text-muted">Varietas Melon:</div><div class="fw-semibold text-dark">🍈 ${item.varietas || '-'}</div></div>
-                  <div class="mb-2"><div class="small text-muted">Durasi Open Farm (7 Hari):</div><div class="fw-semibold text-dark">📅 ${item.tglMulai} s/d ${item.tglSelesai}</div><div class="small text-muted">⏰ ${item.jam || '-'}</div></div>
-                  <div class="p-2 bg-light rounded border mb-3"><div class="d-flex justify-content-between align-items-center mb-1"><span class="small text-muted">Harga / Kg</span><strong class="text-success">Rp ${Number(item.harga || 0).toLocaleString('id-ID')}</strong></div></div>
+                  <div class="mb-2"><div class="small text-muted" style="font-size:0.75rem;">Varietas Melon:</div><div class="fw-semibold text-dark small">🍈 ${item.varietas || '-'}</div></div>
+                  <div class="mb-2"><div class="small text-muted" style="font-size:0.75rem;">Durasi Panen:</div><div class="fw-semibold text-dark small">📅 ${item.tglMulai} s/d ${item.tglSelesai}</div><div class="small text-muted" style="font-size:0.72rem;">⏰ ${item.jam || '-'}</div></div>
+                  <div class="p-2 bg-light rounded border mb-2"><div class="d-flex justify-content-between align-items-center"><span class="small text-muted" style="font-size:0.75rem;">Harga / Kg</span><strong class="text-success small">Rp ${Number(item.harga || 0).toLocaleString('id-ID')}</strong></div></div>
                   <div class="p-2 bg-light rounded border mb-3">
-                    <div class="progress mb-1" style="height: 10px;"><div class="progress-bar ${barColor}" style="width: ${item.persentaseKuota || 0}%;"></div></div>
-                    <div class="d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.75rem;"><span>Terisi: ${item.terisi || 0} orang</span><span>Maks: ${item.kapasitas || 0} orang (${item.persentaseKuota || 0}%)</span></div>
+                    <div class="progress mb-1" style="height: 8px;"><div class="progress-bar ${barColor}" style="width: ${item.persentaseKuota || 0}%;"></div></div>
+                    <div class="d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.7rem;"><span>Terisi: ${item.terisi || 0} orang</span><span>Maks: ${item.kapasitas || 0} orang (${item.persentaseKuota || 0}%)</span></div>
                   </div>
-                  ${item.catatan ? `<div class="alert alert-light border border-1 small text-muted py-1 px-2 mb-3">ℹ️ ${item.catatan}</div>` : ''}
-                  <div class="d-flex gap-2 mt-auto">
-                    <a href="${item.maps || '#'}" target="_blank" class="btn btn-outline-success btn-sm flex-fill">🗺️ Lokasi</a>
-                    <a href="${waUrl}" target="_blank" class="btn btn-success btn-sm flex-fill">💬 WA</a>
-                    <button type="button" onclick="bukaModalUpdatePengunjung('${item.idPanen}', '${safeNamaGH}', ${item.terisi || 0}, ${item.kapasitas || 0})" class="btn btn-outline-primary btn-sm">➕ Pengunjung</button>
+                  ${item.catatan ? `<div class="alert alert-light border border-1 small text-muted py-1 px-2 mb-3" style="font-size:0.75rem;">ℹ️ ${item.catatan}</div>` : ''}
+                  <div class="d-flex gap-1 mt-auto">
+                    <a href="${item.maps || '#'}" target="_blank" class="btn btn-outline-success btn-sm flex-fill py-1" style="font-size:0.75rem;">🗺️ Lokasi</a>
+                    <a href="${waUrl}" target="_blank" class="btn btn-success btn-sm flex-fill py-1" style="font-size:0.75rem;">💬 WA</a>
+                    <button type="button" onclick="bukaModalUpdatePengunjung('${item.idPanen}', '${safeNamaGH}', ${item.terisi || 0}, ${item.kapasitas || 0})" class="btn btn-outline-primary btn-sm py-1" style="font-size:0.75rem;">➕ Pengunjung</button>
                   </div>
                 </div>
               </div>
@@ -618,26 +654,22 @@
         var jumlah = document.getElementById('inputJumlahPengunjung').value;
         var btn = document.getElementById('btnSimpanPengunjung');
         var pesan = document.getElementById('pesanUpdatePengunjung');
-        btn.disabled = true; btn.innerHTML = '⏳ Menyimpan...';
+        btn.disabled = true; btn.innerHTML = '⏳...';
 
-        fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'tambahPengunjung', idPanen: idPanen, jumlah: jumlah })
-        })
-        .then(res => res.json())
+        kirimRequestAPI({ action: 'tambahPengunjung', idPanen: idPanen, jumlah: jumlah })
         .then(res => {
-          btn.disabled = false; btn.innerHTML = '💾 Simpan Tambahan';
+          btn.disabled = false; btn.innerHTML = '💾 Simpan';
           if (res.success) {
-            pesan.innerHTML = '<div class="alert alert-success py-2 mt-2">' + res.message + '</div>';
+            pesan.innerHTML = '<div class="alert alert-success py-1 small mt-2">' + res.message + '</div>';
             setTimeout(() => {
               bootstrap.Modal.getInstance(document.getElementById('modalPengunjung')).hide();
               muatDataAwal();
             }, 1200);
-          } else { pesan.innerHTML = '<div class="alert alert-danger py-2 mt-2">' + res.message + '</div>'; }
+          } else { pesan.innerHTML = '<div class="alert alert-danger py-1 small mt-2">' + res.message + '</div>'; }
         })
         .catch(err => {
-          btn.disabled = false; btn.innerHTML = '💾 Simpan Tambahan';
-          pesan.innerHTML = '<div class="alert alert-danger py-2 mt-2">Gagal: ' + err + '</div>';
+          btn.disabled = false; btn.innerHTML = '💾 Simpan';
+          pesan.innerHTML = '<div class="alert alert-danger py-1 small mt-2">Gagal: ' + err + '</div>';
         });
       }
 
@@ -678,25 +710,21 @@
           }
         };
 
-        fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
+        kirimRequestAPI(payload)
         .then(res => {
           btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';
           if (res.success) {
-            pesanForm.innerHTML = '<div class="alert alert-success">' + res.message + '</div>';
+            pesanForm.innerHTML = '<div class="alert alert-success small">' + res.message + '</div>';
             document.getElementById('formPendaftaran').reset();
             setTimeout(() => {
               bootstrap.Modal.getInstance(document.getElementById('modalDaftar')).hide();
               muatDataAwal();
             }, 1500);
-          } else { pesanForm.innerHTML = '<div class="alert alert-danger">' + res.message + '</div>'; }
+          } else { pesanForm.innerHTML = '<div class="alert alert-danger small">' + res.message + '</div>'; }
         })
         .catch(err => {
           btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';
-          pesanForm.innerHTML = '<div class="alert alert-danger">Terjadi kesalahan: ' + err + '</div>';
+          pesanForm.innerHTML = '<div class="alert alert-danger small">Terjadi kesalahan: ' + err + '</div>';
         });
       }
     </script>
