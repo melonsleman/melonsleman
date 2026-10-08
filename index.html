@@ -29,6 +29,14 @@
   </head>
   <body>
 
+    <!-- NAVBAR TOP -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 py-2">
+      <div class="container-fluid">
+        <span class="navbar-brand fs-6 fw-bold text-success">🍈 Portal Agrowisata Sleman</span>
+        <button class="btn btn-outline-warning btn-sm fw-bold ms-auto" onclick="bukaModalLoginAdmin()">🔐 Panel Admin</button>
+      </div>
+    </nav>
+
     <div class="hero-header mb-4">
       <div class="container text-center">
         <div class="d-flex justify-content-center align-items-center mb-3">
@@ -90,6 +98,71 @@
 
       <div id="infoHasil" class="mb-3 text-muted small fw-semibold" style="display: none;"></div>
       <div id="daftar-agenda" class="row g-4"></div>
+    </div>
+
+    <!-- MODAL LOGIN ADMIN -->
+    <div class="modal fade" id="modalLoginAdmin" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+          <div class="modal-header bg-dark text-white">
+            <h6 class="modal-title fw-bold">🔑 Verifikasi Akses Admin</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Masukkan PIN Admin:</label>
+              <input type="password" id="pinAdmin" class="form-control text-center fs-4" placeholder="••••" maxlength="6">
+            </div>
+            <div id="pesanLoginAdmin"></div>
+            <button type="button" class="btn btn-warning w-100 fw-bold" onclick="verifikasiPINAdmin()">Masuk Panel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DASHBOARD PANEL ADMIN -->
+    <div class="modal fade" id="modalDashboardAdmin" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-dark text-white">
+            <h5 class="modal-title fw-bold">⚙️ Dashboard Pengelola / Admin Open Farm</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            
+            <div class="alert alert-info py-2 d-flex justify-content-between align-items-center">
+              <span>📌 <strong>Informasi Admin:</strong> Data diperbarui secara otomatis dari Google Sheets.</span>
+              <button class="btn btn-sm btn-outline-primary fw-bold" onclick="muatDataAwal()">🔄 Refresh Data</button>
+            </div>
+
+            <h6 class="fw-bold text-success border-bottom pb-2">📊 Rekapitulasi Data Greenhouse & Kuota Pengunjung</h6>
+            <div class="table-responsive">
+              <table class="table table-hover table-striped align-middle small">
+                <thead class="table-dark">
+                  <tr>
+                    <th>Nama Greenhouse</th>
+                    <th>Kapanewon</th>
+                    <th>Varietas</th>
+                    <th>Tgl Panen</th>
+                    <th>Kapasitas</th>
+                    <th>Terisi</th>
+                    <th>Kuota (%)</th>
+                    <th>Status</th>
+                    <th>Aksi Admin</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelAdminContent">
+                  <!-- Diisi otomatis oleh JavaScript -->
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- MODAL PENDAFTARAN -->
@@ -175,7 +248,8 @@
 
     <script>
       // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-      const API_URL = "https://script.google.com/macros/s/AKfycbw3fh7txlMq3vfX2wc3wcfa-3cH4-NN5d6tqEpW1yKgSp6myqgGXenKr5nLVfhEYoqh/exec";
+      const API_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+      const PIN_ADMIN = "5747"; // PIN DEFAULT ADMIN
 
       var semuaData = [];
       var namaHariIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -185,6 +259,58 @@
       window.onload = function() {
         muatDataAwal();
       };
+
+      function bukaModalLoginAdmin() {
+        document.getElementById('pinAdmin').value = '';
+        document.getElementById('pesanLoginAdmin').innerHTML = '';
+        var modal = new bootstrap.Modal(document.getElementById('modalLoginAdmin'));
+        modal.show();
+      }
+
+      function verifikasiPINAdmin() {
+        var inputPin = document.getElementById('pinAdmin').value;
+        var pesan = document.getElementById('pesanLoginAdmin');
+        
+        if (inputPin === PIN_ADMIN) {
+          bootstrap.Modal.getInstance(document.getElementById('modalLoginAdmin')).hide();
+          renderTabelAdmin();
+          var modalAdmin = new bootstrap.Modal(document.getElementById('modalDashboardAdmin'));
+          modalAdmin.show();
+        } else {
+          pesan.innerHTML = '<div class="alert alert-danger py-1 small mb-2">PIN Salah!</div>';
+        }
+      }
+
+      function renderTabelAdmin() {
+        var tbody = document.getElementById('tabelAdminContent');
+        if (!semuaData || semuaData.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Belum ada data.</td></tr>';
+          return;
+        }
+
+        var html = '';
+        semuaData.forEach(function(item) {
+          var safeNama = (item.namaGH || '').replace(/'/g, "\\'");
+          html += `
+            <tr>
+              <td class="fw-bold text-success">${item.namaGH}</td>
+              <td>${item.kapanewon}</td>
+              <td>${item.varietas}</td>
+              <td>${item.tglMulai} - ${item.tglSelesai}</td>
+              <td>${item.kapasitas} orang</td>
+              <td><strong>${item.terisi}</strong> orang</td>
+              <td><span class="badge ${item.persentaseKuota >= 100 ? 'bg-danger' : 'bg-success'}">${item.persentaseKuota}%</span></td>
+              <td><span class="badge bg-secondary">${item.status}</span></td>
+              <td>
+                <button class="btn btn-sm btn-primary py-0" onclick="bootstrap.Modal.getInstance(document.getElementById('modalDashboardAdmin')).hide(); bukaModalUpdatePengunjung('${item.idPanen}', '${safeNama}', ${item.terisi}, ${item.kapasitas})">
+                  ➕ Pengunjung
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+      }
 
       function inisialisasiPetaOSM() {
         if (mapLeaflet !== null) return;
@@ -460,7 +586,7 @@
         })
         .then(res => res.json())
         .then(res => {
-          btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';
+          btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';PI
           if (res.success) {
             pesanForm.innerHTML = '<div class="alert alert-success">' + res.message + '</div>';
             document.getElementById('formPendaftaran').reset();
