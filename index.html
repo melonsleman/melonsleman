@@ -33,7 +33,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3 py-2">
       <div class="container-fluid">
         <span class="navbar-brand fs-6 fw-bold text-success">🍈 Portal Agrowisata Sleman</span>
-        <button class="btn btn-outline-warning btn-sm fw-bold ms-auto" onclick="bukaModalLoginAdmin()">🔐 Panel Admin</button>
+        <button class="btn btn-outline-warning btn-sm fw-bold ms-auto position-relative" onclick="bukaModalLoginAdmin()">
+          🔐 Panel Admin
+          <span id="badgePendingCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">0</span>
+        </button>
       </div>
     </nav>
 
@@ -120,41 +123,73 @@
       </div>
     </div>
 
-    <!-- MODAL DASHBOARD PANEL ADMIN -->
+    <!-- MODAL DASHBOARD PANEL ADMIN APPROVAL -->
     <div class="modal fade" id="modalDashboardAdmin" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title fw-bold">⚙️ Dashboard Pengelola / Admin Open Farm</h5>
+            <h5 class="modal-title fw-bold">⚙️ Dashboard Persetujuan & Pengelola Admin</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             
-            <div class="alert alert-info py-2 d-flex justify-content-between align-items-center">
-              <span>📌 <strong>Informasi Admin:</strong> Data diperbarui secara otomatis dari Google Sheets.</span>
-              <button class="btn btn-sm btn-outline-primary fw-bold" onclick="muatDataAwal()">🔄 Refresh Data</button>
-            </div>
+            <ul class="nav nav-tabs mb-3" id="adminTab" role="tablist">
+              <li class="nav-item">
+                <button class="nav-link active fw-bold text-dark" id="tab-pending-tab" data-bs-toggle="tab" data-bs-target="#tab-pending" type="button">
+                  ⏳ Menunggu Persetujuan <span id="countTabPending" class="badge bg-danger ms-1">0</span>
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link fw-bold text-dark" id="tab-approved-tab" data-bs-toggle="tab" data-bs-target="#tab-approved" type="button">
+                  ✅ Pendaftaran Disetujui (Tayang)
+                </button>
+              </li>
+            </ul>
 
-            <h6 class="fw-bold text-success border-bottom pb-2">📊 Rekapitulasi Data Greenhouse & Kuota Pengunjung</h6>
-            <div class="table-responsive">
-              <table class="table table-hover table-striped align-middle small">
-                <thead class="table-dark">
-                  <tr>
-                    <th>Nama Greenhouse</th>
-                    <th>Kapanewon</th>
-                    <th>Varietas</th>
-                    <th>Tgl Panen</th>
-                    <th>Kapasitas</th>
-                    <th>Terisi</th>
-                    <th>Kuota (%)</th>
-                    <th>Status</th>
-                    <th>Aksi Admin</th>
-                  </tr>
-                </thead>
-                <tbody id="tabelAdminContent">
-                  <!-- Diisi otomatis oleh JavaScript -->
-                </tbody>
-              </table>
+            <div class="tab-content" id="adminTabContent">
+              <!-- TAB 1: PENDING APPROVAL -->
+              <div class="tab-pane fade show active" id="tab-pending">
+                <div class="table-responsive">
+                  <table class="table table-hover table-striped align-middle small">
+                    <thead class="table-warning">
+                      <tr>
+                        <th>Nama Greenhouse</th>
+                        <th>Pemilik / WA</th>
+                        <th>Wilayah</th>
+                        <th>Varietas Melon</th>
+                        <th>Jadwal Panen</th>
+                        <th>Lokasi Maps</th>
+                        <th class="text-center">Aksi Persetujuan</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabelPendingContent">
+                      <!-- Diisi JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TAB 2: APPROVED -->
+              <div class="tab-pane fade" id="tab-approved">
+                <div class="table-responsive">
+                  <table class="table table-hover table-striped align-middle small">
+                    <thead class="table-dark">
+                      <tr>
+                        <th>Nama Greenhouse</th>
+                        <th>Kapanewon</th>
+                        <th>Varietas</th>
+                        <th>Tgl Panen</th>
+                        <th>Terisi / Maks</th>
+                        <th>Status</th>
+                        <th>Aksi Admin</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tabelApprovedContent">
+                      <!-- Diisi JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -249,7 +284,7 @@
     <script>
       // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
       const API_URL = "https://script.google.com/macros/s/AKfycbw3fh7txlMq3vfX2wc3wcfa-3cH4-NN5d6tqEpW1yKgSp6myqgGXenKr5nLVfhEYoqh/exec";
-      const PIN_ADMIN = "5747"; // PIN DEFAULT ADMIN
+      const PIN_ADMIN = "5747";
 
       var semuaData = [];
       var namaHariIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -273,7 +308,7 @@
         
         if (inputPin === PIN_ADMIN) {
           bootstrap.Modal.getInstance(document.getElementById('modalLoginAdmin')).hide();
-          renderTabelAdmin();
+          renderTabelAdminPersetujuan();
           var modalAdmin = new bootstrap.Modal(document.getElementById('modalDashboardAdmin'));
           modalAdmin.show();
         } else {
@@ -281,35 +316,83 @@
         }
       }
 
-      function renderTabelAdmin() {
-        var tbody = document.getElementById('tabelAdminContent');
-        if (!semuaData || semuaData.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">Belum ada data.</td></tr>';
-          return;
+      function renderTabelAdminPersetujuan() {
+        var tbodyPending = document.getElementById('tabelPendingContent');
+        var tbodyApproved = document.getElementById('tabelApprovedContent');
+        
+        var listPending = semuaData.filter(i => i.statusApprove === 'Pending');
+        var listApproved = semuaData.filter(i => i.statusApprove === 'Approved');
+
+        document.getElementById('countTabPending').innerText = listPending.length;
+
+        // Render Pending
+        if (listPending.length === 0) {
+          tbodyPending.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Tidak ada pendaftaran baru yang menunggu persetujuan.</td></tr>';
+        } else {
+          var htmlPending = '';
+          listPending.forEach(function(item) {
+            htmlPending += `
+              <tr>
+                <td class="fw-bold text-dark">${item.namaGH}</td>
+                <td>${item.pemilik}<br><small class="text-muted">${item.wa}</small></td>
+                <td>${item.kapanewon}</td>
+                <td>${item.varietas}</td>
+                <td>${item.tglMulai} - ${item.tglSelesai}</td>
+                <td><a href="${item.maps}" target="_blank" class="btn btn-sm btn-outline-secondary py-0">🗺️ Buka Maps</a></td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-success py-1 px-2 fw-bold me-1" onclick="eksekusiApproval('${item.idPanen}', 'Approved')">✅ Approve</button>
+                  <button class="btn btn-sm btn-danger py-1 px-2 fw-bold" onclick="eksekusiApproval('${item.idPanen}', 'Rejected')">❌ Reject</button>
+                </td>
+              </tr>
+            `;
+          });
+          tbodyPending.innerHTML = htmlPending;
         }
 
-        var html = '';
-        semuaData.forEach(function(item) {
-          var safeNama = (item.namaGH || '').replace(/'/g, "\\'");
-          html += `
-            <tr>
-              <td class="fw-bold text-success">${item.namaGH}</td>
-              <td>${item.kapanewon}</td>
-              <td>${item.varietas}</td>
-              <td>${item.tglMulai} - ${item.tglSelesai}</td>
-              <td>${item.kapasitas} orang</td>
-              <td><strong>${item.terisi}</strong> orang</td>
-              <td><span class="badge ${item.persentaseKuota >= 100 ? 'bg-danger' : 'bg-success'}">${item.persentaseKuota}%</span></td>
-              <td><span class="badge bg-secondary">${item.status}</span></td>
-              <td>
-                <button class="btn btn-sm btn-primary py-0" onclick="bootstrap.Modal.getInstance(document.getElementById('modalDashboardAdmin')).hide(); bukaModalUpdatePengunjung('${item.idPanen}', '${safeNama}', ${item.terisi}, ${item.kapasitas})">
-                  ➕ Pengunjung
-                </button>
-              </td>
-            </tr>
-          `;
-        });
-        tbody.innerHTML = html;
+        // Render Approved
+        if (listApproved.length === 0) {
+          tbodyApproved.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Belum ada data pendaftaran yang disetujui.</td></tr>';
+        } else {
+          var htmlApproved = '';
+          listApproved.forEach(function(item) {
+            var safeNama = (item.namaGH || '').replace(/'/g, "\\'");
+            htmlApproved += `
+              <tr>
+                <td class="fw-bold text-success">${item.namaGH}</td>
+                <td>${item.kapanewon}</td>
+                <td>${item.varietas}</td>
+                <td>${item.tglMulai} - ${item.tglSelesai}</td>
+                <td><strong>${item.terisi}</strong> / ${item.kapasitas} orang</td>
+                <td><span class="badge bg-success">Tayang</span></td>
+                <td>
+                  <button class="btn btn-sm btn-primary py-0" onclick="bootstrap.Modal.getInstance(document.getElementById('modalDashboardAdmin')).hide(); bukaModalUpdatePengunjung('${item.idPanen}', '${safeNama}', ${item.terisi}, ${item.kapasitas})">
+                    ➕ Pengunjung
+                  </button>
+                </td>
+              </tr>
+            `;
+          });
+          tbodyApproved.innerHTML = htmlApproved;
+        }
+      }
+
+      function eksekusiApproval(idPanen, statusTarget) {
+        if (!confirm('Apakah Anda yakin ingin mengubah status pendaftaran ini menjadi ' + statusTarget + '?')) return;
+
+        fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'updateStatusPendaftaran', idPanen: idPanen, statusApprove: statusTarget })
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            alert(res.message);
+            muatDataAwal();
+          } else {
+            alert('Gagal: ' + res.message);
+          }
+        })
+        .catch(err => alert('Terjadi kesalahan: ' + err));
       }
 
       function inisialisasiPetaOSM() {
@@ -382,7 +465,7 @@
 
       function muatDataAwal() {
         document.getElementById('loading').style.display = 'block';
-        fetch(API_URL)
+        fetch(API_URL, { redirect: 'follow' })
           .then(res => res.json())
           .then(data => inisialisasiHalaman(data))
           .catch(err => {
@@ -393,8 +476,22 @@
       function inisialisasiHalaman(data) {
         semuaData = data || [];
         document.getElementById('loading').style.display = 'none';
-        updateRingkasanStatistik(semuaData);
-        isiDropdownKapanewon(semuaData);
+
+        // Hitung Notifikasi Badge Pending untuk Tombol Admin
+        var pendingCount = semuaData.filter(i => i.statusApprove === 'Pending').length;
+        var badgeEl = document.getElementById('badgePendingCount');
+        if (pendingCount > 0) {
+          badgeEl.style.display = 'inline-block';
+          badgeEl.innerText = pendingCount;
+        } else {
+          badgeEl.style.display = 'none';
+        }
+
+        // Filter Publik: Hanya menampilkan pendaftaran yang berstatus 'Approved'
+        var dataPublik = semuaData.filter(i => i.statusApprove === 'Approved');
+
+        updateRingkasanStatistik(dataPublik);
+        isiDropdownKapanewon(dataPublik);
         terapkanFilter();
       }
 
@@ -428,11 +525,12 @@
       }
 
       function terapkanFilter() {
+        var dataPublik = semuaData.filter(i => i.statusApprove === 'Approved');
         var valKapanewon = (document.getElementById('filterKapanewon').value || '').toLowerCase().trim();
         var valStatus = (document.getElementById('filterStatus').value || '').toLowerCase().trim();
         var valCari = (document.getElementById('inputCari').value || '').toLowerCase().trim();
 
-        var hasilFilter = semuaData.filter(function(item) {
+        var hasilFilter = dataPublik.filter(function(item) {
           var itemKapanewon = String(item.kapanewon || '').toLowerCase().trim();
           var itemStatus = String(item.status || '').toLowerCase().trim();
           var matchKapanewon = (valKapanewon === "") || (itemKapanewon === valKapanewon);
@@ -455,7 +553,7 @@
         infoHasil.style.display = 'block'; infoHasil.innerText = 'Menampilkan ' + data.length + ' agenda open farm.';
 
         if (!data || data.length === 0) {
-          container.innerHTML = '<div class="col-12"><div class="alert alert-warning text-center py-4">Data tidak ditemukan.</div></div>';
+          container.innerHTML = '<div class="col-12"><div class="alert alert-warning text-center py-4">Belum ada agenda open farm disetujui.</div></div>';
           return;
         }
 
@@ -586,7 +684,7 @@
         })
         .then(res => res.json())
         .then(res => {
-          btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';PI
+          btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';
           if (res.success) {
             pesanForm.innerHTML = '<div class="alert alert-success">' + res.message + '</div>';
             document.getElementById('formPendaftaran').reset();
