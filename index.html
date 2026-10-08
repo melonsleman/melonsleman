@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Agrowisata Melon Sleman</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+      body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+      .hero-header { 
+        position: relative;
+        background: linear-gradient(rgba(10, 40, 15, 0.75), rgba(15, 60, 25, 0.82)), 
+                    url('https://lh3.googleusercontent.com/d/1TkfNlJ4u5-Cch6mS-lHj8p-9Pb3QsTLx') center/cover no-repeat;
+        color: white; padding: 3.5rem 0 3rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      }
+      .logo-header { max-height: 95px; width: auto; filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.4)); }
+      .card-greenhouse { transition: transform 0.2s, box-shadow 0.2s; border: none; border-radius: 14px; }
+      .card-greenhouse:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important; }
+      .badge-berlangsung { background-color: #198754; color: white; }
+      .badge-mendatang { background-color: #0d6efd; color: white; }
+      .badge-selesai { background-color: #6c757d; color: white; }
+      .filter-box { background: white; border-radius: 14px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); }
+      .stat-card { background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 0.75rem 0.5rem; }
+      .badge-pemkab { background: rgba(255, 193, 7, 0.9); color: #111; letter-spacing: 0.5px; }
+      #map-container { height: 380px; width: 100%; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); z-index: 1; }
+    </style>
+  </head>
+  <body>
+
+    <div class="hero-header mb-4">
+      <div class="container text-center">
+        <div class="d-flex justify-content-center align-items-center mb-3">
+          <img src="https://lh3.googleusercontent.com/d/1ZffmHPiuOvjKqJ7lXnBp0J4B3fMN4fT0" alt="Logo Kabupaten Sleman" class="logo-header">
+        </div>
+        <span class="badge badge-pemkab px-3 py-2 mb-2 fw-bold text-uppercase shadow-sm">Dinas Pertanian, Pangan dan Perikanan Kabupaten Sleman</span>
+        <h1 class="fw-bold display-6 mb-2 text-white">🍈 Agrowisata Open Farm Melon Sleman</h1>
+        <p class="lead mb-4 mx-auto text-white-50" style="max-width: 780px;">Katalog Resmi Sentra Budidaya Melon Hidroponik Modern Lereng Gunung Merapi Kab. Sleman</p>
+
+        <div class="row g-2 justify-content-center mb-4" style="max-width: 900px; margin: 0 auto;">
+          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statGH">0</div><small class="text-white-50">Greenhouse</small></div></div>
+          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statWilayah">0</div><small class="text-white-50">Kapanewon</small></div></div>
+          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statLuas">0 m²</div><small class="text-white-50">Total Luasan</small></div></div>
+          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statPopulasi">0</div><small class="text-white-50">Populasi Pohon</small></div></div>
+          <div class="col-6 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statAktif">0</div><small class="text-white-50">Panen Aktif</small></div></div>
+        </div>
+        
+        <button class="btn btn-warning fw-bold px-4 py-2.5 rounded-pill shadow" data-bs-toggle="modal" data-bs-target="#modalDaftar">➕ Daftarkan Greenhouse / Agenda Panen</button>
+      </div>
+    </div>
+
+    <div class="container mb-5">
+      <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+            <h5 class="fw-bold text-success mb-0">🗺️ Peta Sebaran Greenhouse Open Farm (Sleman)</h5>
+            <small class="text-muted">Klik penanda untuk melihat info detail</small>
+          </div>
+          <div id="map-container"></div>
+        </div>
+      </div>
+
+      <div class="filter-box mb-4">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold text-secondary">📍 Wilayah (Kapanewon)</label>
+            <select id="filterKapanewon" class="form-select" onchange="terapkanFilter()"><option value="">Semua Kapanewon</option></select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold text-secondary">🏷️ Status Agenda</label>
+            <select id="filterStatus" class="form-select" onchange="terapkanFilter()">
+              <option value="">Semua Status</option>
+              <option value="Berlangsung">Berlangsung (Bisa Dikunjungi)</option>
+              <option value="Mendatang">Mendatang</option>
+              <option value="Selesai">Selesai</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold text-secondary">🔍 Cari Melon / Greenhouse</label>
+            <input type="text" id="inputCari" class="form-control" placeholder="Contoh: Inthanon, Pakem..." onkeyup="terapkanFilter()">
+          </div>
+        </div>
+      </div>
+
+      <div id="loading" class="text-center my-5">
+        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;"></div>
+        <p class="mt-3 text-muted fw-semibold">Memuat data open farm melon...</p>
+      </div>
+
+      <div id="infoHasil" class="mb-3 text-muted small fw-semibold" style="display: none;"></div>
+      <div id="daftar-agenda" class="row g-4"></div>
+    </div>
+
+    <!-- MODAL PENDAFTARAN -->
+    <div class="modal fade" id="modalDaftar" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-header-title fw-bold">📝 Form Pendaftaran Agenda Open Farm</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formPendaftaran" onsubmit="prosesKirimForm(event)">
+              <div class="row g-3 mb-3">
+                <div class="col-md-6"><label class="form-label">Nama Greenhouse</label><input type="text" class="form-control" id="namaGH" required></div>
+                <div class="col-md-6"><label class="form-label">Pemilik</label><input type="text" class="form-control" id="pemilik" required></div>
+                <div class="col-md-6">
+                  <label class="form-label">Kapanewon</label>
+                  <select class="form-select" id="kapanewon" required>
+                    <option value="">-- Pilih --</option>
+                    <option value="Berbah">Berbah</option><option value="Cangkringan">Cangkringan</option><option value="Depok">Depok</option><option value="Gamping">Gamping</option><option value="Godean">Godean</option><option value="Kalasan">Kalasan</option><option value="Minggir">Minggir</option><option value="Mlati">Mlati</option><option value="Moyudan">Moyudan</option><option value="Ngaglik">Ngaglik</option><option value="Ngemplak">Ngemplak</option><option value="Pakem">Pakem</option><option value="Prambanan">Prambanan</option><option value="Seyegan">Seyegan</option><option value="Sleman">Sleman</option><option value="Tempel">Tempel</option><option value="Turi">Turi</option>
+                  </select>
+                </div>
+                <div class="col-md-6"><label class="form-label">WhatsApp</label><input type="text" class="form-control" id="wa" required></div>
+                <div class="col-md-6"><label class="form-label">Luas (m²)</label><input type="number" class="form-control" id="luas" required></div>
+                <div class="col-md-6"><label class="form-label">Populasi (Pohon)</label><input type="number" class="form-control" id="populasi" required></div>
+                <div class="col-12"><label class="form-label">Alamat Lengkap</label><input type="text" class="form-control" id="alamat" required></div>
+                <div class="col-12"><label class="form-label">Link Google Maps</label><input type="url" class="form-control" id="maps" required></div>
+                <div class="col-md-6"><label class="form-label">Latitude</label><input type="text" class="form-control" id="latitude"></div>
+                <div class="col-md-6"><label class="form-label">Longitude</label><input type="text" class="form-control" id="longitude"></div>
+                <div class="col-md-6"><label class="form-label">Varietas Melon</label><input type="text" class="form-control" id="varietas" required></div>
+                <div class="col-md-6"><label class="form-label">Tanggal Tanam</label><input type="date" class="form-control" id="tglTanam" required onchange="hitungEstimasiPanen()"></div>
+                <div class="col-md-6"><label class="form-label">Mulai Panen</label><input type="text" class="form-control bg-light" id="tglMulai" readonly></div>
+                <div class="col-md-6"><label class="form-label">Selesai Panen</label><input type="text" class="form-control bg-light" id="tglSelesai" readonly></div>
+                <div class="col-md-4"><label class="form-label">Jam Operasional</label><input type="text" class="form-control" id="jam" required></div>
+                <div class="col-md-4"><label class="form-label">Kapasitas Maks</label><input type="number" class="form-control" id="kapasitas" required></div>
+                <div class="col-md-4"><label class="form-label">Harga/Kg</label><input type="number" class="form-control" id="harga" required></div>
+                <div class="col-12"><label class="form-label">Catatan</label><textarea class="form-control" id="catatan" rows="2"></textarea></div>
+              </div>
+              <div id="pesanForm" class="mt-3"></div>
+              <div class="modal-footer px-0 pb-0 pt-3">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" id="btnSubmit" class="btn btn-success fw-bold">💾 Kirim Pendaftaran</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PENGUNJUNG -->
+    <div class="modal fade" id="modalPengunjung" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-header-title fw-bold">👥 Catat / Tambah Pengunjung</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="formUpdatePengunjung" onsubmit="prosesUpdatePengunjung(event)">
+              <input type="hidden" id="modalIdPanen">
+              <h6 class="fw-bold text-dark mb-3" id="modalNamaGH">-</h6>
+              <div class="p-2 bg-light rounded border mb-3">
+                <small class="text-muted d-block">Status Kuota Saat Ini:</small>
+                <strong id="modalInfoTerisi">0</strong> / <strong id="modalInfoMaks">0</strong> Orang
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Jumlah Pengunjung Tambahan</label>
+                <input type="number" class="form-control form-control-lg text-center" id="inputJumlahPengunjung" min="1" value="1" required>
+              </div>
+              <div id="pesanUpdatePengunjung"></div>
+              <div class="modal-footer px-0 pb-0 pt-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" id="btnSimpanPengunjung" class="btn btn-primary fw-bold">💾 Simpan Tambahan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+      // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+      const API_URL = "https://script.google.com/macros/s/AKfycbw3fh7txlMq3vfX2wc3wcfa-3cH4-NN5d6tqEpW1yKgSp6myqgGXenKr5nLVfhEYoqh/exec";
+
+      var semuaData = [];
+      var namaHariIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      var mapLeaflet = null;
+      var markerLayerGroup = null;
+
+      window.onload = function() {
+        muatDataAwal();
+      };
+
+      function inisialisasiPetaOSM() {
+        if (mapLeaflet !== null) return;
+        mapLeaflet = L.map('map-container').setView([-7.6884, 110.3421], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapLeaflet);
+        markerLayerGroup = L.layerGroup().addTo(mapLeaflet);
+      }
+
+      function updatePetaMarkers(dataList) {
+        if (!mapLeaflet) inisialisasiPetaOSM();
+        if (!markerLayerGroup) return;
+        markerLayerGroup.clearLayers();
+
+        var validBounds = [];
+        dataList.forEach(function(item) {
+          if (item.lat && item.lng) {
+            var colorBadge = item.status === 'Berlangsung' ? 'success' : (item.status === 'Mendatang' ? 'primary' : 'secondary');
+            var popupContent = `
+              <div style="min-width:180px;">
+                <span class="badge bg-${colorBadge} mb-1">${item.status}</span>
+                <h6 class="fw-bold mb-1 text-success">${item.namaGH}</h6>
+                <div class="small text-muted mb-1">🍈 Melon: <strong>${item.varietas || '-'}</strong></div>
+                <div class="small text-muted mb-2">📍 ${item.kapanewon}</div>
+                <a href="${item.maps}" target="_blank" class="btn btn-sm btn-success text-white w-100" style="font-size:0.75rem;">🗺️ Rute Google Maps</a>
+              </div>
+            `;
+            var marker = L.marker([item.lat, item.lng]).bindPopup(popupContent);
+            markerLayerGroup.addLayer(marker);
+            validBounds.push([item.lat, item.lng]);
+          }
+        });
+        if (validBounds.length > 0) mapLeaflet.fitBounds(validBounds, { padding: [30, 30] });
+      }
+
+      function formatDMY(d) {
+        var dd = String(d.getDate()).padStart(2, '0');
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var yy = String(d.getFullYear()).slice(-2);
+        return dd + '/' + mm + '/' + yy;
+      }
+
+      function formatTglTanamDenganHari(strTgl) {
+        if (!strTgl) return '-';
+        var dt = null;
+        if (strTgl.indexOf('-') !== -1) {
+          var p = strTgl.split('-');
+          if (p[0].length === 4) dt = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+          else if (p[2].length === 4) dt = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
+        } else if (strTgl.indexOf('/') !== -1) {
+          var p = strTgl.split('/');
+          var thn = Number(p[2]); if (thn < 100) thn += 2000;
+          dt = new Date(thn, Number(p[1]) - 1, Number(p[0]));
+        }
+        if (dt && !isNaN(dt.getTime())) return namaHariIndo[dt.getDay()] + ', ' + formatDMY(dt);
+        return strTgl;
+      }
+
+      function hitungEstimasiPanen() {
+        var valTanam = document.getElementById('tglTanam').value;
+        if (valTanam) {
+          var p = valTanam.split('-');
+          var dtTanam = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+          var dtMulai = new Date(dtTanam.getTime()); dtMulai.setDate(dtMulai.getDate() + 75);
+          document.getElementById('tglMulai').value = formatDMY(dtMulai);
+          var dtSelesai = new Date(dtMulai.getTime()); dtSelesai.setDate(dtSelesai.getDate() + 7);
+          document.getElementById('tglSelesai').value = formatDMY(dtSelesai);
+        }
+      }
+
+      function muatDataAwal() {
+        document.getElementById('loading').style.display = 'block';
+        fetch(API_URL)
+          .then(res => res.json())
+          .then(data => inisialisasiHalaman(data))
+          .catch(err => {
+            document.getElementById('loading').innerHTML = '<div class="alert alert-danger text-center">Gagal memuat data: ' + err + '</div>';
+          });
+      }
+
+      function inisialisasiHalaman(data) {
+        semuaData = data || [];
+        document.getElementById('loading').style.display = 'none';
+        updateRingkasanStatistik(semuaData);
+        isiDropdownKapanewon(semuaData);
+        terapkanFilter();
+      }
+
+      function updateRingkasanStatistik(data) {
+        var ghSet = new Set(), kapanewonSet = new Set(), totalLuas = 0, totalPopulasi = 0, panenAktif = 0;
+        data.forEach(function(item) {
+          if (item.namaGH) ghSet.add(item.namaGH);
+          if (item.kapanewon && item.kapanewon !== '-') kapanewonSet.add(item.kapanewon);
+          if (item.luas) totalLuas += Number(item.luas);
+          if (item.populasi) totalPopulasi += Number(item.populasi);
+          if (item.status === 'Berlangsung') panenAktif++;
+        });
+        document.getElementById('statGH').innerText = ghSet.size;
+        document.getElementById('statWilayah').innerText = kapanewonSet.size;
+        document.getElementById('statLuas').innerText = totalLuas.toLocaleString('id-ID') + ' m²';
+        document.getElementById('statPopulasi').innerText = totalPopulasi.toLocaleString('id-ID');
+        document.getElementById('statAktif').innerText = panenAktif;
+      }
+
+      function isiDropdownKapanewon(data) {
+        var selectKapanewon = document.getElementById('filterKapanewon');
+        selectKapanewon.innerHTML = '<option value="">Semua Kapanewon</option>';
+        var daftarKapanewon = [];
+        data.forEach(function(item) {
+          if (item.kapanewon && item.kapanewon !== '-' && !daftarKapanewon.includes(item.kapanewon)) daftarKapanewon.push(item.kapanewon);
+        });
+        daftarKapanewon.sort().forEach(function(kap) {
+          var opt = document.createElement('option'); opt.value = kap; opt.innerHTML = kap;
+          selectKapanewon.appendChild(opt);
+        });
+      }
+
+      function terapkanFilter() {
+        var valKapanewon = (document.getElementById('filterKapanewon').value || '').toLowerCase().trim();
+        var valStatus = (document.getElementById('filterStatus').value || '').toLowerCase().trim();
+        var valCari = (document.getElementById('inputCari').value || '').toLowerCase().trim();
+
+        var hasilFilter = semuaData.filter(function(item) {
+          var itemKapanewon = String(item.kapanewon || '').toLowerCase().trim();
+          var itemStatus = String(item.status || '').toLowerCase().trim();
+          var matchKapanewon = (valKapanewon === "") || (itemKapanewon === valKapanewon);
+          var matchStatus = (valStatus === "") || (itemStatus === valStatus);
+          var teksGabungan = (String(item.namaGH || '') + " " + String(item.varietas || '') + " " + String(item.kapanewon || '') + " " + String(item.catatan || '') + " " + String(item.pemilik || '') + " " + String(item.alamat || '')).toLowerCase();
+          var matchCari = true;
+          if (valCari !== "") {
+            matchCari = valCari.split(/\s+/).every(function(kata) { return teksGabungan.indexOf(kata) !== -1; });
+          }
+          return matchKapanewon && matchStatus && matchCari;
+        });
+
+        tampilkanKartuAgenda(hasilFilter);
+        setTimeout(function() { updatePetaMarkers(hasilFilter); }, 100);
+      }
+
+      function tampilkanKartuAgenda(data) {
+        var container = document.getElementById('daftar-agenda');
+        var infoHasil = document.getElementById('infoHasil');
+        infoHasil.style.display = 'block'; infoHasil.innerText = 'Menampilkan ' + data.length + ' agenda open farm.';
+
+        if (!data || data.length === 0) {
+          container.innerHTML = '<div class="col-12"><div class="alert alert-warning text-center py-4">Data tidak ditemukan.</div></div>';
+          return;
+        }
+
+        var html = '';
+        data.forEach(function(item) {
+          var badgeClass = item.status === 'Berlangsung' ? 'badge-berlangsung' : (item.status === 'Mendatang' ? 'badge-mendatang' : 'badge-selesai');
+          var statusIcon = item.status === 'Berlangsung' ? '🟢' : (item.status === 'Mendatang' ? '🔵' : '🔴');
+          var barColor = item.persentaseKuota >= 100 ? 'bg-danger' : (item.persentaseKuota >= 75 ? 'bg-warning' : 'bg-success');
+          var waUrl = item.wa ? 'https://wa.me/' + item.wa + '?text=Halo%20' + encodeURIComponent(item.namaGH) + ',%20saya%20ingin%20menanyakan%20info%20open%20farm' : '#';
+          var safeNamaGH = (item.namaGH || '').replace(/'/g, "\\'");
+
+          html += `
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-100 shadow-sm card-greenhouse">
+                <div class="card-body d-flex flex-column">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge ${badgeClass} px-2 py-1">${statusIcon} ${item.status}</span>
+                    <small class="text-muted fw-semibold">📍 Kapanewon ${item.kapanewon || '-'}</small>
+                  </div>
+                  <h5 class="card-title fw-bold text-success mb-1">${item.namaGH}</h5>
+                  <div class="small text-muted mb-2">🌱 Tgl Tanam: <strong class="text-dark">${formatTglTanamDenganHari(item.tglTanam)}</strong></div>
+                  <div class="d-flex gap-2 mb-2">
+                    <span class="badge bg-light text-dark border fw-normal">📐 Luas: <strong>${item.luas ? item.luas + ' m²' : '-'}</strong></span>
+                    <span class="badge bg-light text-dark border fw-normal">🪴 Pop: <strong>${item.populasi ? item.populasi + ' poh' : '-'}</strong></span>
+                  </div>
+                  <hr class="my-2 text-muted">
+                  <div class="mb-2"><div class="small text-muted">Varietas Melon:</div><div class="fw-semibold text-dark">🍈 ${item.varietas || '-'}</div></div>
+                  <div class="mb-2"><div class="small text-muted">Durasi Open Farm (7 Hari):</div><div class="fw-semibold text-dark">📅 ${item.tglMulai} s/d ${item.tglSelesai}</div><div class="small text-muted">⏰ ${item.jam || '-'}</div></div>
+                  <div class="p-2 bg-light rounded border mb-3"><div class="d-flex justify-content-between align-items-center mb-1"><span class="small text-muted">Harga / Kg</span><strong class="text-success">Rp ${Number(item.harga || 0).toLocaleString('id-ID')}</strong></div></div>
+                  <div class="p-2 bg-light rounded border mb-3">
+                    <div class="progress mb-1" style="height: 10px;"><div class="progress-bar ${barColor}" style="width: ${item.persentaseKuota || 0}%;"></div></div>
+                    <div class="d-flex justify-content-between align-items-center small text-muted" style="font-size: 0.75rem;"><span>Terisi: ${item.terisi || 0} orang</span><span>Maks: ${item.kapasitas || 0} orang (${item.persentaseKuota || 0}%)</span></div>
+                  </div>
+                  ${item.catatan ? `<div class="alert alert-light border border-1 small text-muted py-1 px-2 mb-3">ℹ️ ${item.catatan}</div>` : ''}
+                  <div class="d-flex gap-2 mt-auto">
+                    <a href="${item.maps || '#'}" target="_blank" class="btn btn-outline-success btn-sm flex-fill">🗺️ Lokasi</a>
+                    <a href="${waUrl}" target="_blank" class="btn btn-success btn-sm flex-fill">💬 WA</a>
+                    <button type="button" onclick="bukaModalUpdatePengunjung('${item.idPanen}', '${safeNamaGH}', ${item.terisi || 0}, ${item.kapasitas || 0})" class="btn btn-outline-primary btn-sm">➕ Pengunjung</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+
+      function bukaModalUpdatePengunjung(idPanen, namaGH, terisi, kapasitas) {
+        document.getElementById('modalIdPanen').value = idPanen;
+        document.getElementById('modalNamaGH').innerText = namaGH;
+        document.getElementById('modalInfoTerisi').innerText = terisi;
+        document.getElementById('modalInfoMaks').innerText = kapasitas;
+        document.getElementById('inputJumlahPengunjung').value = 1;
+        document.getElementById('pesanUpdatePengunjung').innerHTML = '';
+        var myModal = new bootstrap.Modal(document.getElementById('modalPengunjung'));
+        myModal.show();
+      }
+
+      function prosesUpdatePengunjung(event) {
+        event.preventDefault();
+        var idPanen = document.getElementById('modalIdPanen').value;
+        var jumlah = document.getElementById('inputJumlahPengunjung').value;
+        var btn = document.getElementById('btnSimpanPengunjung');
+        var pesan = document.getElementById('pesanUpdatePengunjung');
+        btn.disabled = true; btn.innerHTML = '⏳ Menyimpan...';
+
+        fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'tambahPengunjung', idPanen: idPanen, jumlah: jumlah })
+        })
+        .then(res => res.json())
+        .then(res => {
+          btn.disabled = false; btn.innerHTML = '💾 Simpan Tambahan';
+          if (res.success) {
+            pesan.innerHTML = '<div class="alert alert-success py-2 mt-2">' + res.message + '</div>';
+            setTimeout(() => {
+              bootstrap.Modal.getInstance(document.getElementById('modalPengunjung')).hide();
+              muatDataAwal();
+            }, 1200);
+          } else { pesan.innerHTML = '<div class="alert alert-danger py-2 mt-2">' + res.message + '</div>'; }
+        })
+        .catch(err => {
+          btn.disabled = false; btn.innerHTML = '💾 Simpan Tambahan';
+          pesan.innerHTML = '<div class="alert alert-danger py-2 mt-2">Gagal: ' + err + '</div>';
+        });
+      }
+
+      function prosesKirimForm(event) {
+        event.preventDefault();
+        var btnSubmit = document.getElementById('btnSubmit');
+        var pesanForm = document.getElementById('pesanForm');
+        btnSubmit.disabled = true; btnSubmit.innerHTML = '⏳ Menyimpan...';
+
+        var valTanam = document.getElementById('tglTanam').value;
+        var strTglTanamFormatted = '-';
+        if (valTanam) {
+          var p = valTanam.split('-');
+          strTglTanamFormatted = formatDMY(new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])));
+        }
+
+        var payload = {
+          action: 'simpanPendaftaran',
+          data: {
+            namaGH: document.getElementById('namaGH').value,
+            pemilik: document.getElementById('pemilik').value,
+            kapanewon: document.getElementById('kapanewon').value,
+            wa: document.getElementById('wa').value,
+            alamat: document.getElementById('alamat').value,
+            maps: document.getElementById('maps').value,
+            latitude: document.getElementById('latitude').value,
+            longitude: document.getElementById('longitude').value,
+            luas: document.getElementById('luas').value,
+            populasi: document.getElementById('populasi').value,
+            varietas: document.getElementById('varietas').value,
+            tglTanam: strTglTanamFormatted,
+            tglMulai: document.getElementById('tglMulai').value,
+            tglSelesai: document.getElementById('tglSelesai').value,
+            jam: document.getElementById('jam').value,
+            kapasitas: document.getElementById('kapasitas').value,
+            harga: document.getElementById('harga').value,
+            catatan: document.getElementById('catatan').value
+          }
+        };
+
+        fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(res => {
+          btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';
+          if (res.success) {
+            pesanForm.innerHTML = '<div class="alert alert-success">' + res.message + '</div>';
+            document.getElementById('formPendaftaran').reset();
+            setTimeout(() => {
+              bootstrap.Modal.getInstance(document.getElementById('modalDaftar')).hide();
+              muatDataAwal();
+            }, 1500);
+          } else { pesanForm.innerHTML = '<div class="alert alert-danger">' + res.message + '</div>'; }
+        })
+        .catch(err => {
+          btnSubmit.disabled = false; btnSubmit.innerHTML = '💾 Kirim Pendaftaran';
+          pesanForm.innerHTML = '<div class="alert alert-danger">Terjadi kesalahan: ' + err + '</div>';
+        });
+      }
+    </script>
+  </body>
+</html>
