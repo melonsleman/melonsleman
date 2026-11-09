@@ -440,7 +440,6 @@
           event.target.disabled = false;
           event.target.innerHTML = oldText;
           if (res.success) {
-            // Membuka file Google Slides hasil generate agar bisa diunduh sebagai gambar/PDF
             window.open(res.pdfUrl, '_blank');
           } else {
             alert('Gagal membuat flyer: ' + res.message);
