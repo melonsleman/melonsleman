@@ -27,7 +27,7 @@
         background: rgba(255, 193, 7, 0.95);
         color: #111;
         letter-spacing: 0.5px;
-        white-space: normal !important; /* Agar teks otomatis membungkus/pindah baris di HP */
+        white-space: normal !important;
         line-height: 1.4;
         display: inline-block;
         max-width: 95%;
@@ -46,7 +46,6 @@
       
       #map-container { height: 350px; width: 100%; border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); z-index: 1; }
 
-      /* PENYESUAIAN KHUSUS LAYAR SELEMPANG / HP (MOBILE RESPONSIVE) */
       @media (max-width: 576px) {
         .hero-header { padding: 1.8rem 0.8rem 1.5rem 0.8rem; }
         .logo-header { max-height: 60px; }
@@ -78,7 +77,6 @@
           <img src="https://lh3.googleusercontent.com/d/1ZffmHPiuOvjKqJ7lXnBp0J4B3fMN4fT0" alt="Logo Kabupaten Sleman" class="logo-header">
         </div>
         
-        <!-- TEKS DINAS PERTANIAN DENGAN BUNGKUS RESPONSIVE -->
         <div class="mb-2">
           <span class="badge badge-pemkab px-3 py-2 fw-bold text-uppercase shadow-sm">
             Dinas Pertanian, Pangan dan Perikanan Kabupaten Sleman
@@ -86,7 +84,7 @@
         </div>
         
         <h1 class="fw-bold display-6 mb-2 text-white">🍈 Agrowisata Open Farm Melon Sleman</h1>
-        <p class="lead mb-3 mx-auto text-white-50" style="max-width: 780px;">Katalog Resmi Sentra Budidaya Melon Hidroponik Modern Kabupaten Sleman Sleman</p>
+        <p class="lead mb-3 mx-auto text-white-50" style="max-width: 780px;">Katalog Resmi Sentra Budidaya Melon Hidroponik Modern Kabupaten Sleman</p>
 
         <div class="row g-2 justify-content-center mb-3" style="max-width: 900px; margin: 0 auto;">
           <div class="col-4 col-md-2.4 col-lg"><div class="stat-card"><div class="h4 fw-bold mb-0 text-white" id="statGH">0</div><small class="text-white-50">Greenhouse</small></div></div>
@@ -162,12 +160,12 @@
       </div>
     </div>
 
-    <!-- MODAL DASHBOARD PANEL ADMIN APPROVAL -->
+    <!-- MODAL DASHBOARD PANEL ADMIN APPROVAL & KELOLA STATUS -->
     <div class="modal fade" id="modalDashboardAdmin" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header bg-dark text-white">
-            <h5 class="modal-title fw-bold fs-6">⚙️ Dashboard Persetujuan Admin</h5>
+            <h5 class="modal-title fw-bold fs-6">⚙️ Dashboard Persetujuan & Kelola Status Admin</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body p-2 p-md-3">
@@ -180,7 +178,7 @@
               </li>
               <li class="nav-item">
                 <button class="nav-link fw-bold text-dark small" id="tab-approved-tab" data-bs-toggle="tab" data-bs-target="#tab-approved" type="button">
-                  ✅ Disetujui
+                  ✅ Disetujui & Kelola Status Agenda
                 </button>
               </li>
             </ul>
@@ -196,6 +194,7 @@
                         <th>Pemilik/WA</th>
                         <th>Wilayah</th>
                         <th>Varietas</th>
+                        <th>Status Diajukan</th>
                         <th>Aksi</th>
                       </tr>
                     </thead>
@@ -204,7 +203,7 @@
                 </div>
               </div>
 
-              <!-- TAB 2: APPROVED -->
+              <!-- TAB 2: APPROVED & UBAH STATUS MANUAL -->
               <div class="tab-pane fade" id="tab-approved">
                 <div class="table-responsive">
                   <table class="table table-hover table-striped align-middle" style="font-size: 0.78rem;">
@@ -214,7 +213,8 @@
                         <th>Wilayah</th>
                         <th>Varietas</th>
                         <th>Pengunjung</th>
-                        <th>Aksi</th>
+                        <th>Ubah Status Agenda Manual</th>
+                        <th>Aksi Tambahan</th>
                       </tr>
                     </thead>
                     <tbody id="tabelApprovedContent"></tbody>
@@ -262,9 +262,20 @@
                 <div class="col-md-6"><label class="form-label small">Tanggal Tanam</label><input type="date" class="form-control form-control-sm" id="tglTanam" required onchange="hitungEstimasiPanen()"></div>
                 <div class="col-md-6"><label class="form-label small">Mulai Panen</label><input type="text" class="form-control form-control-sm bg-light" id="tglMulai" readonly></div>
                 <div class="col-md-6"><label class="form-label small">Selesai Panen</label><input type="text" class="form-control form-control-sm bg-light" id="tglSelesai" readonly></div>
-                <div class="col-md-4"><label class="form-label small">Jam Operasional</label><input type="text" class="form-control form-control-sm" id="jam" required></div>
-                <div class="col-md-4"><label class="form-label small">Kapasitas Maks</label><input type="number" class="form-control form-control-sm" id="kapasitas" required></div>
-                <div class="col-md-4"><label class="form-label small">Harga/Kg</label><input type="number" class="form-control form-control-sm" id="harga" required></div>
+                
+                <!-- FITUR PILIH STATUS MANUAL SAAT DAFTAR -->
+                <div class="col-md-6">
+                  <label class="form-label small fw-bold text-success"> Status Agenda Open Farm</label>
+                  <select class="form-select form-select-sm border-success fw-bold" id="statusAgenda" required>
+                    <option value="Berlangsung" selected>🟢 Berlangsung (Bisa Dikunjungi)</option>
+                    <option value="Mendatang">🔵 Mendatang</option>
+                    <option value="Selesai">🔴 Selesai</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6"><label class="form-label small">Jam Operasional</label><input type="text" class="form-control form-control-sm" id="jam" required></div>
+                <div class="col-md-6"><label class="form-label small">Kapasitas Maks</label><input type="number" class="form-control form-control-sm" id="kapasitas" required></div>
+                <div class="col-md-6"><label class="form-label small">Harga/Kg</label><input type="number" class="form-control form-control-sm" id="harga" required></div>
                 <div class="col-12"><label class="form-label small">Catatan</label><textarea class="form-control form-control-sm" id="catatan" rows="2"></textarea></div>
               </div>
               <div id="pesanForm" class="mt-3"></div>
@@ -313,7 +324,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-      // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI (BERAKHIRAN /exec)
       const API_URL = "https://script.google.com/macros/s/AKfycbw3fh7txlMq3vfX2wc3wcfa-3cH4-NN5d6tqEpW1yKgSp6myqgGXenKr5nLVfhEYoqh/exec";
       const PIN_ADMIN = "5747";
 
@@ -357,7 +367,7 @@
         document.getElementById('countTabPending').innerText = listPending.length;
 
         if (listPending.length === 0) {
-          tbodyPending.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Tidak ada pendaftaran baru.</td></tr>';
+          tbodyPending.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">Tidak ada pendaftaran baru.</td></tr>';
         } else {
           var htmlPending = '';
           listPending.forEach(function(item) {
@@ -367,6 +377,7 @@
                 <td>${item.pemilik}<br><small class="text-muted">${item.wa}</small></td>
                 <td>${item.kapanewon}</td>
                 <td>${item.varietas}</td>
+                <td><span class="badge bg-secondary">${item.status}</span></td>
                 <td>
                   <button class="btn btn-sm btn-success py-0 px-2 fw-bold mb-1" onclick="eksekusiApproval('${item.idPanen}', 'Approved')">✅ Approve</button>
                   <button class="btn btn-sm btn-danger py-0 px-2 fw-bold" onclick="eksekusiApproval('${item.idPanen}', 'Rejected')">❌ Reject</button>
@@ -378,7 +389,7 @@
         }
 
         if (listApproved.length === 0) {
-          tbodyApproved.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data disetujui.</td></tr>';
+          tbodyApproved.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">Belum ada data disetujui.</td></tr>';
         } else {
           var htmlApproved = '';
           listApproved.forEach(function(item) {
@@ -389,6 +400,13 @@
                 <td>${item.kapanewon}</td>
                 <td>${item.varietas}</td>
                 <td><strong>${item.terisi}</strong>/${item.kapasitas}</td>
+                <td>
+                  <select class="form-select form-select-sm" onchange="eksekusiUbahStatusManual('${item.idPanen}', this.value)">
+                    <option value="Berlangsung" ${item.status === 'Berlangsung' ? 'selected' : ''}>🟢 Berlangsung</option>
+                    <option value="Mendatang" ${item.status === 'Mendatang' ? 'selected' : ''}>🔵 Mendatang</option>
+                    <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>🔴 Selesai</option>
+                  </select>
+                </td>
                 <td>
                   <button class="btn btn-sm btn-primary py-0" onclick="bootstrap.Modal.getInstance(document.getElementById('modalDashboardAdmin')).hide(); bukaModalUpdatePengunjung('${item.idPanen}', '${safeNama}', ${item.terisi}, ${item.kapasitas})">
                     ➕ Pengunjung
@@ -411,6 +429,19 @@
             muatDataAwal();
           } else {
             alert('Gagal: ' + res.message);
+          }
+        })
+        .catch(err => alert('Terjadi kesalahan: ' + err));
+      }
+
+      function eksekusiUbahStatusManual(idPanen, statusManualBaru) {
+        kirimRequestAPI({ action: 'updateStatusManual', idPanen: idPanen, statusManual: statusManualBaru })
+        .then(res => {
+          if (res.success) {
+            alert('Status agenda berhasil diperbarui menjadi: ' + statusManualBaru);
+            muatDataAwal();
+          } else {
+            alert('Gagal mengubah status: ' + res.message);
           }
         })
         .catch(err => alert('Terjadi kesalahan: ' + err));
@@ -484,7 +515,6 @@
         }
       }
 
-      // FUNGSI REQUEST API UNIVERSAL KHUSUS PENCEGAHAN CROS/MOBILE ERROR
       function kirimRequestAPI(payloadData) {
         if (payloadData) {
           return fetch(API_URL, {
@@ -703,6 +733,7 @@
             tglTanam: strTglTanamFormatted,
             tglMulai: document.getElementById('tglMulai').value,
             tglSelesai: document.getElementById('tglSelesai').value,
+            statusAgenda: document.getElementById('statusAgenda').value,
             jam: document.getElementById('jam').value,
             kapasitas: document.getElementById('kapasitas').value,
             harga: document.getElementById('harga').value,
