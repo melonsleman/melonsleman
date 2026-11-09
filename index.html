@@ -391,7 +391,7 @@
                   <button class="btn btn-sm btn-primary py-0 mb-1" onclick="bootstrap.Modal.getInstance(document.getElementById('modalDashboardAdmin')).hide(); bukaModalUpdatePengunjung('${item.idPanen}', '${safeNama}', ${item.terisi}, ${item.kapasitas})">
                     ➕ Pengunjung
                   </button>
-                  <button class="btn btn-sm btn-warning py-0 fw-bold text-dark" onclick="downloadFlyer('${itemJson}')">
+                  <button class="btn btn-sm btn-warning py-0 fw-bold text-dark" onclick="downloadFlyer(event, '${itemJson}')">
                     🖼️ Flyer
                   </button>
                 </td>
@@ -417,13 +417,14 @@
         .catch(err => alert('Terjadi kesalahan: ' + err));
       }
 
-      // FUNGSI AUTO GENERATE & DOWNLOAD FLYER
-      function downloadFlyer(encodedItem) {
+      // FUNGSI AUTO GENERATE & DOWNLOAD FLYER (FORMAT JPG)
+      function downloadFlyer(eBtn, encodedItem) {
         var item = JSON.parse(decodeURIComponent(encodedItem));
         
-        event.target.disabled = true;
-        var oldText = event.target.innerHTML;
-        event.target.innerHTML = '⏳ Membuat...';
+        var btn = eBtn.target;
+        btn.disabled = true;
+        var oldText = btn.innerHTML;
+        btn.innerHTML = '⏳ Meracik JPG...';
 
         kirimRequestAPI({
           action: 'generateFlyer',
@@ -437,17 +438,22 @@
           }
         })
         .then(res => {
-          event.target.disabled = false;
-          event.target.innerHTML = oldText;
-          if (res.success) {
-            window.open(res.pdfUrl, '_blank');
+          btn.disabled = false;
+          btn.innerHTML = oldText;
+          if (res.success && res.downloadUrl) {
+            var a = document.createElement('a');
+            a.href = res.downloadUrl;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
           } else {
-            alert('Gagal membuat flyer: ' + res.message);
+            alert('Gagal membuat flyer: ' + (res.message || 'Respons tidak valid'));
           }
         })
         .catch(err => {
-          event.target.disabled = false;
-          event.target.innerHTML = oldText;
+          btn.disabled = false;
+          btn.innerHTML = oldText;
           alert('Terjadi kesalahan jaringan: ' + err);
         });
       }
@@ -667,8 +673,8 @@
                     <button type="button" onclick="bukaModalUpdatePengunjung('${item.idPanen}', '${safeNamaGH}', ${item.terisi || 0}, ${item.kapasitas || 0})" class="btn btn-outline-primary btn-sm py-1" style="font-size:0.75rem;">➕ Pengunjung</button>
                   </div>
                   <div class="mt-auto pt-1">
-                    <button type="button" onclick="downloadFlyer('${itemJson}')" class="btn btn-warning btn-sm w-100 fw-bold text-dark py-1" style="font-size:0.75rem;">
-                      🖼️ Download Flyer Promosi
+                    <button type="button" onclick="downloadFlyer(event, '${itemJson}')" class="btn btn-warning btn-sm w-100 fw-bold text-dark py-1" style="font-size:0.75rem;">
+                      🖼️ Download Flyer Promosi (JPG)
                     </button>
                   </div>
 
